@@ -1,1 +1,12 @@
-## Place your answers here.
+Exercise 2:
+
+exploit-2a.py exploits bug #2 (http.c:159) by passing in a header field
+with a very long value (a bit over 512). It's not precise, but it
+certainly works.
+
+exploit-2b.py exploits bug #5 (http.c:255) by passing in a request path
+that's a little longer than 1024. Using gdb, I've even lined it up so
+that the last four bytes (the Z's) exactly overwrite the four bytes of
+the handler. Thanks to the wonky split_path function, we pass the check
+with stat(pn, &st), and the handler is called with the pointer modified
+to our value.

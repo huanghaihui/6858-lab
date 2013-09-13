@@ -88,9 +88,9 @@ variable longer than 1024; fortunately, we can do this by manipulating
 the request path. Since the reqpath variable has size 2048, we won't
 trigger bug #1 while we're exploiting this one.
 
-The fun thing about this exploit is that 'pn' overflows into 'handler',
-which is then called later in http_serve, so we can take control of
-the program flow without needing to overwrite the instruction pointer!
-Stack canaries won't stop us for the same reason.
+The fun thing about this exploit is that 'pn' overflows into 
+'handler', which is then called later in http_serve, so we can take 
+control of the program flow without needing to overwrite the 
+instruction pointer! Stack canaries won't stop us for the same reason.
 
     strcat(pn, name);
