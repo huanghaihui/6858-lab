@@ -10,3 +10,14 @@ that the last four bytes (the Z's) exactly overwrite the four bytes of
 the handler. Thanks to the wonky split_path function, we pass the check
 with stat(pn, &st), and the handler is called with the pointer modified
 to our value.
+
+
+Exercise 3:
+
+I've continued exploiting bug #5 for this exercise. This is the only
+bug I found that can be exploited via another variable in the stack
+frame (as opposed to overwriting the instruction pointer), but bugs #1,
+#2, and #3 should all be exploitable by overwriting the instruction
+pointer. (Bug #4 isn't very exploitable, because of the limited
+overflow it allows for and because the buffer it overflows isn't on the
+stack.)
