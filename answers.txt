@@ -21,3 +21,13 @@ frame (as opposed to overwriting the instruction pointer), but bugs #1,
 pointer. (Bug #4 isn't very exploitable, because of the limited
 overflow it allows for and because the buffer it overflows isn't on the
 stack.)
+
+
+Exercise 4:
+
+Bugs #2 and #5 clearly work quite well for this exercise. There's no
+reason that bugs #1 and #3 wouldn't work equally well; both allow
+corruption of the stack frame, and all you need to do to make a
+return-to-libc attack work is to overwrite the base pointer and add
+an argument for the file to unlink. Bug #4, of course, won't work here,
+because the variable it overflows isn't on the stack.
