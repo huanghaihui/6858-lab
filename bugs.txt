@@ -3,15 +3,94 @@
 # desc
 #
 
-[zookd.c:1612]
-description goes here. for example, the 'buf' variable can be
-overwritten by the 'msg' variable because ...
+[zookd.c:68]
+We can overflow the 'reqpath' variable into 'fd' and the instruction
+pointer. The code passes 'reqpath' as a pointer to http_request_line,
+which in turn passes it to url_decode. The url_decode function copies
+over characters (while decoding special sequences) from the request 
+path portion of 'buf' without checking for length. Since 'buf' has 
+size 8192 and 'reqpath' only has size 2048, we can easily blow past 
+the boundary of 'reqpath'.
 
-    <paste offending line(s) of code here>
+To overflow this, we'd send an HTTP request with a really long
+request path, like 'GET /AAAAAAAAAA...'.
 
-[http.c:1512]
-another description.
+A stack canary in zookd.c's process_client function would fix this.
 
-    <paste offending line(s) of code here>
+    if ((errmsg = http_request_line(fd, reqpath, env, &env_len)))
+        return http_err(fd, 500, "http_request_line: %s", errmsg);
+    
+    ...
+    
+    url_decode(reqpath, sp1);
 
-# many more come here
+[http.c:159]
+We can overflow the 'value' variable into 'i', followed by 'fd' and
+the instruction pointer. Like with bug #1, we are using url_decode
+to copy characters into 'value' (size 512) indirectly from 'buf'
+(size 8192), and since the length isn't checked in url_decode, we
+can write past the end of 'value'.
+
+To overflow this, we'd send an HTTP request with a really long value
+in the header, like 'Cookie: AAAAAAAAAA...'.
+
+A stack canary in http.c's http_request_header function would fix
+this.
+
+    url_decode(value, sp);
+
+[http.c:165]
+We can overflow the 'envvar' variable into 'value' and then into the
+other things mentioned in the bug #2. We are using the unsafe
+function sprintf to copy from 'buf' (size 8192) into 'envvar' (size
+512), and so we can easily overflow 'envvar' past 'buf' and 'i' into
+the function argument and instruction pointer.
+
+To overflow this without triggering bug #2, we'd send an HTTP request 
+with a really long value in the header, like 'AAAAAA...AAAA: foo'.
+
+A stack canary in http.c's http_request_header function would fix
+this.
+
+    sprintf(envvar, "HTTP_%s", buf);
+
+[http.c:94]
+We can overflow the 'envp' variable. Although this function only
+fills 'envp' (size 8192) from different sections of 'buf' (size 8192),
+the extra strings (e.g., 'REQUEST_METHOD=') make up for the
+difference and allow us to write a little past the end of 'envp'.
+
+To overflow this, we could make any section of the HTTP request long;
+enlarging the protocol, like 'GET /foo.html AAAAAAAAAA...', would
+trigger this bug without triggering bug #1.
+
+This bug is not very practical to exploit, firstly because we can only
+write a limited amount past the end of the buffer, and secondly
+because the buffer is static and thus not on the stack, so we're
+probably not corrupting memory that's useful to us. On the bright
+side, a stack canary doesn't help.
+
+    envp += sprintf(envp, "REQUEST_METHOD=%s", buf) + 1;
+    envp += sprintf(envp, "SERVER_PROTOCOL=%s", sp2) + 1;
+
+    ...
+
+    envp += sprintf(envp, "REQUEST_URI=%s", reqpath) + 1;
+
+[http.c:255]
+We can overflow the 'pn' variable. Although the getcwd function will
+not write past the end of 'pn', strcat has no such reservations.
+Moreover, because 'name' is an environmental variable and part of
+'env', it can be much longer than the 'pn' buffer (size 1024).
+
+To overflow this, we need to make the REQUEST_URI environmental
+variable longer than 1024; fortunately, we can do this by manipulating
+the request path. Since the reqpath variable has size 2048, we won't
+trigger bug #1 while we're exploiting this one.
+
+The fun thing about this exploit is that 'pn' overflows into 
+'handler', which is then called later in http_serve, so we can take 
+control of the program flow without needing to overwrite the 
+instruction pointer! Stack canaries won't stop us for the same reason.
+
+    strcat(pn, name);

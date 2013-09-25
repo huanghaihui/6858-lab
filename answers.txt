@@ -1,1 +1,54 @@
-## Place your answers here.
+Exercise 2:
+
+exploit-2a.py exploits bug #2 (http.c:159) by passing in a header field
+with a very long value (a bit over 512). It's not precise, but it
+certainly works.
+
+exploit-2b.py exploits bug #5 (http.c:255) by passing in a request path
+that's a little longer than 1024. Using gdb, I've even lined it up so
+that the last four bytes (the Z's) exactly overwrite the four bytes of
+the handler. Thanks to the wonky split_path function, we pass the check
+with stat(pn, &st), and the handler is called with the pointer modified
+to our value.
+
+
+Exercise 3:
+
+I've continued exploiting bug #5 for this exercise. This is the only
+bug I found that can be exploited via another variable in the stack
+frame (as opposed to overwriting the instruction pointer), but bugs #1,
+#2, and #3 should all be exploitable by overwriting the instruction
+pointer. (Bug #4 isn't very exploitable, because of the limited
+overflow it allows for and because the buffer it overflows isn't on the
+stack.)
+
+
+Exercise 4:
+
+Bugs #2 and #5 clearly work quite well for this exercise. There's no
+reason that bugs #1 and #3 wouldn't work equally well; both allow
+corruption of the stack frame, and all you need to do to make a
+return-to-libc attack work is to overwrite the base pointer and add
+an argument for the file to unlink. Bug #4, of course, won't work here,
+because the variable it overflows isn't on the stack.
+
+
+Exercise 5:
+
+a) If you submit an HTTP request without a newline character, the read()
+call in http_read_line will block, and zookd will not accept any new incoming
+connections. This basically results in denial-of-service; the website becomes
+unusable. See exploit-5a.py. 
+
+To fix this, we'd want to configure the call to read() so it doesn't
+wait if it gets to the end of input, or at least fork off a new process to
+perform the read() so other connections can be accepted.
+
+b) If you submit a GET request containing "..", you can get access to system
+files. For instance, if you request "../../../etc/passwd", you'll actually get
+/etc/passwd. See exploit-5b.py.
+
+The website currently gets rid of "..", but it's still no good if you can
+submit an HTTP request directly to get around that. We need to at least have
+a method to detect the existence of ".." in the request path; ideally,
+we'd jail zookd somewhere it wouldn't have access to sensitive files.
