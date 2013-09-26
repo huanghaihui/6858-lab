@@ -121,6 +121,8 @@ pid_t launch_svc(CONF *conf, const char *name)
         err(1, "fork");
     case 0:  /* child */
         close(fds[0]);
+	chdir("/jail");
+	chroot("/jail");
         break;
     default: /* parent */
         warnx("%s: pid %d", name, pid);
