@@ -4,9 +4,15 @@ from debug import *
 import time
 
 def transfer(sender, recipient, zoobars):
+    if zoobars <= 0:
+        raise ValueError()
+
     persondb = person_setup()
     senderp = persondb.query(Person).get(sender)
     recipientp = persondb.query(Person).get(recipient)
+
+    if senderp == recipientp:
+        raise AttributeError()
 
     sender_balance = senderp.zoobars - zoobars
     recipient_balance = recipientp.zoobars + zoobars
