@@ -1,0 +1,1 @@
+sudo rm -r /jail; sudo make setup; sudo ./zookld zook.conf

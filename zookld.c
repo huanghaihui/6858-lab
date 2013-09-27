@@ -121,8 +121,6 @@ pid_t launch_svc(CONF *conf, const char *name)
         err(1, "fork");
     case 0:  /* child */
         close(fds[0]);
-	chdir("/jail");
-	chroot("/jail");
         break;
     default: /* parent */
         warnx("%s: pid %d", name, pid);
@@ -146,16 +144,25 @@ pid_t launch_svc(CONF *conf, const char *name)
                     break;
     }
 
+    if ((dir = NCONF_get_string(conf, name, "dir")))
+    {
+        /* chroot into dir */
+      	chdir(dir);
+	chroot(dir);
+    }
+
     if (NCONF_get_number_e(conf, name, "uid", &uid))
     {
         /* change real, effective, and saved uid to uid */
         warnx("setuid %ld", uid);
+	setresuid(uid, uid, uid);
     }
 
     if (NCONF_get_number_e(conf, name, "gid", &gid))
     {
         /* change real, effective, and saved gid to gid */
         warnx("setgid %ld", gid);
+	setresgid(gid, gid, gid);
     }
 
     if ((groups = NCONF_get_string(conf, name, "extra_gids")))
@@ -164,11 +171,7 @@ pid_t launch_svc(CONF *conf, const char *name)
         /* set the grouplist to gids */
         for (i = 0; i < ngids; i++)
             warnx("extra gid %d", gids[i]);
-    }
-
-    if ((dir = NCONF_get_string(conf, name, "dir")))
-    {
-        /* chroot into dir */
+        setgroups(ngids, gids);
     }
 
     signal(SIGCHLD, SIG_DFL);
