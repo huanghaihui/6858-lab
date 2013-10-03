@@ -62,6 +62,7 @@ cp /etc/resolv.conf /jail/etc/
 mkdir -p /jail/usr/share/zoneinfo
 cp -r /usr/share/zoneinfo/America /jail/usr/share/zoneinfo/
 
+create_socket_dir /jail/authsvc 61014:61014 755
 create_socket_dir /jail/echosvc 61010:61010 755
 
 mkdir -p /jail/tmp
@@ -73,12 +74,15 @@ mknod /jail/dev/urandom c 1 9
 cp -r zoobar /jail/
 rm -rf /jail/zoobar/db
 
+python /jail/zoobar/zoodb.py init-cred
 python /jail/zoobar/zoodb.py init-person
 python /jail/zoobar/zoodb.py init-transfer
 
-set_perms 61013:61013 500 /jail/zoobar/db
-set_perms 61013:61013 700 /jail/zoobar/db/person
-set_perms 61013:61013 600 /jail/zoobar/db/person/*
+set_perms 61013:61013 777 /jail/zoobar/db
+set_perms 61014:61014 777 /jail/zoobar/db/cred
+set_perms 61014:61014 777 /jail/zoobar/db/cred/*
+set_perms 61013:61013 777 /jail/zoobar/db/person
+set_perms 61013:61013 777 /jail/zoobar/db/person/*
 set_perms 61013:61013 700 /jail/zoobar/db/transfer
 set_perms 61013:61013 600 /jail/zoobar/db/transfer/*
 
