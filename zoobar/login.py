@@ -4,6 +4,7 @@ from debug import *
 from zoodb import *
 
 import auth_client
+import bank_client
 import bank
 import random
 
@@ -28,6 +29,7 @@ class User(object):
     def addRegistration(self, username, password):
         token = auth_client.register(username, password)
         if token is not None:
+            bank_client.register(username)
             return self.loginCookie(username, token)
         else:
             return None
@@ -43,7 +45,7 @@ class User(object):
         persondb = person_setup()
         self.person = persondb.query(Person).get(username)
         self.token = token
-        self.zoobars = bank.balance(username)
+        self.zoobars = bank_client.balance(username)
 
 def logged_in():
     g.user = User()

@@ -4,7 +4,12 @@ from login import requirelogin
 from zoodb import *
 from debug import *
 from profile import *
-import bank
+import bank_client
+
+def get_log(username):
+    db = transfer_setup()
+    return db.query(Transfer).filter(or_(Transfer.sender==username,
+                                         Transfer.recipient==username))
 
 @catch_err
 @requirelogin
@@ -24,8 +29,8 @@ def users():
             args['profile'] = p_markup
 
             args['user'] = user
-            args['user_zoobars'] = bank.balance(user.username)
-            args['transfers'] = bank.get_log(user.username)
+            args['user_zoobars'] = bank_client.balance(user.username)
+            args['transfers'] = get_log(user.username)
         else:
             args['warning'] = "Cannot find that user."
     return render_template('users.html', **args)
