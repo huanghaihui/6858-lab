@@ -65,6 +65,7 @@ const char *http_request_line(int fd, char *reqpath, char *env, size_t *env_len)
 {
     static char buf[8192];      /* static variables are not on the stack */
     char *sp1, *sp2, *qp, *envp = env;
+    char *envp_end = envp + 8192;
 
     /* For lab 2: don't remove this line. */
     touch("http_request_line");
@@ -91,22 +92,22 @@ const char *http_request_line(int fd, char *reqpath, char *env, size_t *env_len)
     if (strcmp(buf, "GET") && strcmp(buf, "POST"))
         return "Unsupported request (not GET or POST)";
 
-    envp += sprintf(envp, "REQUEST_METHOD=%s", buf) + 1;
-    envp += sprintf(envp, "SERVER_PROTOCOL=%s", sp2) + 1;
+    envp += snprintf(envp, envp_end-envp, "REQUEST_METHOD=%s", buf) + 1;
+    envp += snprintf(envp, envp_end-envp, "SERVER_PROTOCOL=%s", sp2) + 1;
 
     /* parse out query string, e.g. "foo.py?user=bob" */
     if ((qp = strchr(sp1, '?')))
     {
         *qp = '\0';
-        envp += sprintf(envp, "QUERY_STRING=%s", qp + 1) + 1;
+        envp += snprintf(envp, envp_end-envp, "QUERY_STRING=%s", qp + 1) + 1;
     }
 
     /* decode URL escape sequences in the requested path into reqpath */
-    url_decode(reqpath, sp1);
+    url_decode(reqpath, sp1, 2048);
 
-    envp += sprintf(envp, "REQUEST_URI=%s", reqpath) + 1;
+    envp += snprintf(envp, envp_end-envp, "REQUEST_URI=%s", reqpath) + 1;
 
-    envp += sprintf(envp, "SERVER_NAME=zoobar.org") + 1;
+    envp += snprintf(envp, envp_end-envp, "SERVER_NAME=zoobar.org") + 1;
 
     *envp = 0;
     *env_len = envp - env + 1;
@@ -156,13 +157,13 @@ const char *http_request_headers(int fd)
         }
 
         /* Decode URL escape sequences in the value */
-        url_decode(value, sp);
+        url_decode(value, sp, 512);
 
         /* Store header in env. variable for application code */
         /* Some special headers don't use the HTTP_ prefix. */
         if (strcmp(buf, "CONTENT_TYPE") != 0 &&
             strcmp(buf, "CONTENT_LENGTH") != 0) {
-            sprintf(envvar, "HTTP_%s", buf);
+	    snprintf(envvar, 512, "HTTP_%s", buf);
             setenv(envvar, value, 1);
         } else {
             setenv(buf, value, 1);
@@ -279,7 +280,7 @@ void http_serve(int fd, const char *name)
     getcwd(pn, sizeof(pn));
     setenv("DOCUMENT_ROOT", pn, 1);
 
-    strcat(pn, name);
+    strncat(pn, name, (sizeof(pn) - strlen(pn)) - 1);
     split_path(pn);
 
     if (!stat(pn, &st))
@@ -434,10 +435,17 @@ void http_serve_executable(int fd, const char *pn)
     }
 }
 
-void url_decode(char *dst, const char *src)
+void url_decode(char *dst, const char *src, size_t len)
 {
+    size_t i = 0;
+
     for (;;)
     {
+        if (i == len - 1) {
+	    *dst = '\0';
+	    break;
+        }
+
         if (src[0] == '%' && src[1] && src[2])
         {
             char hexbuf[3];
@@ -463,6 +471,7 @@ void url_decode(char *dst, const char *src)
         }
 
         dst++;
+	i++;
     }
 }
 

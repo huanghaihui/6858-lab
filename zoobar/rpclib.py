@@ -3,28 +3,22 @@ import sys
 import socket
 import stat
 import errno
+import json
 from debug import *
 
 def parse_req(req):
-    words = req.split(' ')
-    method = words[0]
-    args = words[1:]
-    kwargs = {}
-    for arg in words[1:]:
-        (name, _, val) = arg.partition('=')
-        kwargs[unicode(name)] = unicode(val)
-    return (method, kwargs)
+    req_data = json.loads(req)
+    return req_data
 
 def format_req(method, kwargs):
-    return '%s %s' % (method,
-                      ' '.join(['%s=%s' % (k, v)
-                                for (k, v) in kwargs.items()]))
+    req_data = (method, kwargs)
+    return json.dumps(req_data)
 
 def parse_resp(resp):
-    return resp
+    return json.loads(resp)
 
 def format_resp(resp):
-    return resp
+    return json.dumps(resp)
 
 def buffered_readlines(sock):
     buf = ''

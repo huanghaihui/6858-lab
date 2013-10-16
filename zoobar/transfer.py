@@ -3,7 +3,8 @@ from flask import g, render_template, request
 from login import requirelogin
 from zoodb import *
 from debug import *
-import bank
+import auth_client
+import bank_client
 import traceback
 
 @catch_err
@@ -11,9 +12,9 @@ import traceback
 def transfer():
     warning = None
     try:
-        if 'recipient' in request.form:
-            zoobars = eval(request.form['zoobars'])
-            bank.transfer(g.user.person.username,
+        if auth_client.check_token(g.user.person.username, g.user.token) and 'recipient' in request.form:
+            zoobars = int(request.form['zoobars'])
+            bank_client.transfer(g.user.person.username,
                           request.form['recipient'], zoobars)
             warning = "Sent %d zoobars" % zoobars
     except (KeyError, ValueError, AttributeError) as e:
