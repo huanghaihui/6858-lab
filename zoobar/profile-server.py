@@ -8,6 +8,7 @@ import urllib
 import socket
 import bank
 import zoodb
+import hashlib
 
 from debug import *
 
@@ -55,15 +56,20 @@ def run_profile(pcode, profile_api_client):
 
 class ProfileServer(rpclib.RpcServer):
     def rpc_run(self, pcode, user, visitor):
-        uid = 0
+        uid = 61013
 
-        userdir = '/tmp'
+        userdir = '/tmp/' + hashlib.sha1(user).hexdigest()
+        if not os.path.exists(userdir):
+            os.mkdir(userdir)
+            os.chown(userdir, uid, uid)
+            os.chmod(userdir, 0700)
 
         (sa, sb) = socket.socketpair(socket.AF_UNIX, socket.SOCK_STREAM, 0)
         pid = os.fork()
         if pid == 0:
             if os.fork() <= 0:
                 sa.close()
+                
                 ProfileAPIServer(user, visitor).run_sock(sb)
                 sys.exit(0)
             else:
