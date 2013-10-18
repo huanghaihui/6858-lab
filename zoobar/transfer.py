@@ -12,10 +12,10 @@ import traceback
 def transfer():
     warning = None
     try:
-        if auth_client.check_token(g.user.person.username, g.user.token) and 'recipient' in request.form:
+        if 'recipient' in request.form:
             zoobars = int(request.form['zoobars'])
             bank_client.transfer(g.user.person.username,
-                          request.form['recipient'], zoobars)
+                          request.form['recipient'], zoobars, g.user.token)
             warning = "Sent %d zoobars" % zoobars
     except (KeyError, ValueError, AttributeError) as e:
         traceback.print_exc()

@@ -7,19 +7,22 @@ import sandboxlib
 import urllib
 import socket
 import bank
+import bank_client
 import zoodb
 import hashlib
 
 from debug import *
+from zoodb import *
 
 ## Cache packages that the sandboxed code might want to import
 import time
 import errno
 
 class ProfileAPIServer(rpclib.RpcServer):
-    def __init__(self, user, visitor):
+    def __init__(self, user, visitor, token):
         self.user = user
         self.visitor = visitor
+        self.token = token
 
     def rpc_get_self(self):
         return self.user
@@ -44,11 +47,11 @@ class ProfileAPIServer(rpclib.RpcServer):
             return None
         return { 'username': p.username,
                  'profile': p.profile,
-                 'zoobars': bank.balance(username),
+                 'zoobars': bank_client.balance(username),
                }
 
     def rpc_xfer(self, target, zoobars):
-        bank.transfer(self.user, target, zoobars)
+        bank_client.transfer(self.user, target, zoobars, self.token)
 
 def run_profile(pcode, profile_api_client):
     globals = {'api': profile_api_client}
@@ -64,13 +67,18 @@ class ProfileServer(rpclib.RpcServer):
             os.chown(userdir, uid, uid)
             os.chmod(userdir, 0700)
 
+        db = cred_setup()
+        cred = db.query(Cred).get(user)
+        token = cred.token
+
         (sa, sb) = socket.socketpair(socket.AF_UNIX, socket.SOCK_STREAM, 0)
         pid = os.fork()
         if pid == 0:
             if os.fork() <= 0:
                 sa.close()
-                
-                ProfileAPIServer(user, visitor).run_sock(sb)
+                os.setresgid(uid, uid, uid)
+                os.setresuid(uid, uid, uid)
+                ProfileAPIServer(user, visitor, token).run_sock(sb)
                 sys.exit(0)
             else:
                 sys.exit(0)

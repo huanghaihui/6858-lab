@@ -2,9 +2,9 @@ from debug import *
 from zoodb import *
 import rpclib
 
-def transfer(sender, recipient, zoobars):
+def transfer(sender, recipient, zoobars, token):
     with rpclib.client_connect('/banksvc/sock') as c:
-        ret = c.call('transfer', s=sender, r=recipient, z=zoobars)
+        ret = c.call('transfer', s=sender, r=recipient, z=zoobars, t=token)
         return ret
 
 def balance(username):

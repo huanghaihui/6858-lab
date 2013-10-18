@@ -1,9 +1,13 @@
 from zoodb import *
 from debug import *
 
+import auth_client
 import time
 
-def transfer(sender, recipient, zoobars):
+def transfer(sender, recipient, zoobars, token):
+    if not auth_client.check_token(sender, token):
+        raise AttributeError()
+
     if zoobars <= 0:
         raise ValueError()
 
